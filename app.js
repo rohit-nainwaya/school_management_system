@@ -29,7 +29,7 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
     ssl: {
-        ca: fs.readFileSync(process.env.DB_CA_CERT_PATH), // Ensure this points to your CA certificate file
+        ca: fs.readFileSync(path.resolve(__dirname, process.env.DB_CA_CERT_PATH)),
         rejectUnauthorized: true, // Verify server identity
     },
 });
