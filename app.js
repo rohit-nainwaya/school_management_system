@@ -21,25 +21,28 @@ app.get('/', (req, res) => {
 
 app.use(bodyParser.json());
 
-// MySQL connection
-const db = mysql.createConnection({
+// Create a MySQL connection pool
+const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
-    ssl: {
+    ssl: process.env.DB_CA_CERT_PATH ? {
         ca: fs.readFileSync(path.resolve(__dirname, process.env.DB_CA_CERT_PATH)),
-        rejectUnauthorized: true, // Verify server identity
-    },
+        rejectUnauthorized: true,
+    } : undefined,
+    connectionLimit: 10, // Adjust the connection limit as needed
 });
 
-db.connect((err) => {
+// Test connection
+pool.getConnection((err, connection) => {
     if (err) {
         console.error('Database connection failed:', err);
         return;
     }
     console.log('Connected to the database');
+    connection.release();
 });
 
 // Add School API
@@ -51,7 +54,7 @@ app.post('/addSchool', (req, res) => {
     }
 
     const query = 'INSERT INTO schools (name, address, latitude, longitude) VALUES (?, ?, ?, ?)';
-    db.query(query, [name, address, latitude, longitude], (err, result) => {
+    pool.query(query, [name, address, latitude, longitude], (err, result) => {
         if (err) {
             console.error('Error inserting data:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -71,7 +74,7 @@ app.get('/listSchools', (req, res) => {
     const userLocation = { latitude: parseFloat(latitude), longitude: parseFloat(longitude) };
 
     const query = 'SELECT * FROM schools';
-    db.query(query, (err, results) => {
+    pool.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching data:', err);
             return res.status(500).json({ error: 'Database error' });
