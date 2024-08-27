@@ -7,6 +7,9 @@ const haversine = require('haversine-distance');
 
 const app = express();
 
+// Load environment variables
+dotenv.config();
+
 // Serve static files from the "public" directory
 app.use(express.static('public'));
 
@@ -14,8 +17,6 @@ app.use(express.static('public'));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
-dotenv.config();
 
 app.use(bodyParser.json());
 
@@ -25,6 +26,11 @@ const db = mysql.createConnection({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
+    port: process.env.DB_PORT,  // Add this line to use the custom port
+    // Uncomment and configure SSL if required by your provider
+    // ssl: {
+    //     rejectUnauthorized: true, // Verify server identity
+    // },
 });
 
 db.connect((err) => {
@@ -53,6 +59,7 @@ app.post('/addSchool', (req, res) => {
     });
 });
 
+// List Schools API
 app.get('/listSchools', (req, res) => {
     const { latitude, longitude } = req.query;
 
@@ -69,11 +76,11 @@ app.get('/listSchools', (req, res) => {
             return res.status(500).json({ error: 'Database error' });
         }
 
-        // Calculate distances in kilometers
+        // Calculate distances in meters
         const schoolsWithDistance = results.map((school) => {
             const schoolLocation = { latitude: school.latitude, longitude: school.longitude };
             const distanceInMeters = haversine(userLocation, schoolLocation);
-            school.distance = (distanceInMeters).toFixed(2); // Convert meters to kilometers and round to 2 decimal places
+            school.distance = (distanceInMeters).toFixed(2); // Round to 2 decimal places
             return school;
         });
 
@@ -83,7 +90,6 @@ app.get('/listSchools', (req, res) => {
         res.json(schoolsWithDistance);
     });
 });
-
 
 // Start the server
 const PORT = process.env.PORT || 3000;
