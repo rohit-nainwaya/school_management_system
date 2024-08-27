@@ -4,6 +4,7 @@ const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const haversine = require('haversine-distance');
+const fs = require('fs');
 
 const app = express();
 
@@ -26,8 +27,9 @@ const db = mysql.createConnection({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,  // Add this line to use the custom port
+    port: process.env.DB_PORT,
     ssl: {
+        ca: fs.readFileSync(process.env.DB_CA_CERT_PATH), // Ensure this points to your CA certificate file
         rejectUnauthorized: true, // Verify server identity
     },
 });
