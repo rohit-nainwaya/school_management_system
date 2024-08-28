@@ -11,17 +11,16 @@ const app = express();
 // Load environment variables
 dotenv.config();
 
-// Serve static files from the "public" directory
 app.use(express.static('public'));
 
-// Define a route for the root URL
+// route for the root URL
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.use(bodyParser.json());
 
-// Create a MySQL connection pool
+// MySQL connection pool
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -80,7 +79,7 @@ app.get('/listSchools', (req, res) => {
             return res.status(500).json({ error: 'Database error' });
         }
 
-        // Calculate distances in meters
+        //distances in meters
         const schoolsWithDistance = results.map((school) => {
             const schoolLocation = { latitude: school.latitude, longitude: school.longitude };
             const distanceInMeters = haversine(userLocation, schoolLocation);
@@ -88,7 +87,7 @@ app.get('/listSchools', (req, res) => {
             return school;
         });
 
-        // Sort by distance
+        // Sorting by distance
         schoolsWithDistance.sort((a, b) => a.distance - b.distance);
 
         res.json(schoolsWithDistance);
